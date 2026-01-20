@@ -94,4 +94,10 @@ public struct EffattaReceiptsCredentials: Sendable {
     let fiscalCode: String
     let password: String
     let vat: String
+    
+    public init(fiscalCode: String, password: String, vat: String) {
+        self.fiscalCode = fiscalCode
+        self.password = password
+        self.vat = vat
+    }
 }
