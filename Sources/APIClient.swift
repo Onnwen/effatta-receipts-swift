@@ -55,7 +55,7 @@ extension AuthenticationMiddleware: ClientMiddleware {
         }
         
         var request = request
-        request.headerFields[.authorization] = "Bearer \(token)"
+        request.headerFields[.authorization] = token
         return try await next(request, body, baseURL)
     }
     
@@ -70,7 +70,8 @@ extension AuthenticationMiddleware: ClientMiddleware {
                     .init(
                         fiscalCode: credentials.fiscalCode,
                         password: credentials.password,
-                        vat: credentials.vat
+                        pin: credentials.pin,
+                        vat: credentials.vat,
                     )
                 )
             )
@@ -98,10 +99,12 @@ public struct EffattaReceiptsCredentials: Sendable {
     let fiscalCode: String
     let password: String
     let vat: String
+    let pin: String?
     
-    public init(fiscalCode: String, password: String, vat: String) {
+    public init(fiscalCode: String, password: String, vat: String, pin: String?) {
         self.fiscalCode = fiscalCode
         self.password = password
         self.vat = vat
+        self.pin = pin
     }
 }
