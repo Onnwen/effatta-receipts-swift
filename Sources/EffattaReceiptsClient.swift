@@ -37,6 +37,24 @@ public final actor EffattaReceiptsClient {
         
         return try response.body.json
     }
+    
+    public func cancelReceipt(id: String, type: Operations.post_sol_api_sol_v1_sol_ade_sol_docs_sol__lcub_docId_rcub__sol_cancel.Input.Body.jsonPayload._typePayload) async throws {
+        let response = try await client.post_sol_api_sol_v1_sol_ade_sol_docs_sol__lcub_docId_rcub__sol_cancel(
+            .init(
+                path: .init(docId: id),
+                body: .json(
+                    .init(
+                        _type: type,
+                        items: type == .refund ? [1] : nil
+                    )
+                )
+            )
+        )
+        
+        guard case .ok = response else {
+            throw EffattaReceiptsError.badStatusCode
+        }
+    }
 
     public enum EffattaReceiptsError: Error {
         case unknown
