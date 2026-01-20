@@ -55,7 +55,7 @@ extension AuthenticationMiddleware: ClientMiddleware {
         }
         
         var request = request
-        request.headerFields[.authorization] = token
+        request.headerFields[.authorization] = "Bearer \(token)"
         return try await next(request, body, baseURL)
     }
     
