@@ -1,0 +1,352 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "ADE - Fiscal Drawer API",
+    "version": "1.0.0",
+    "description": "REST Services for the integration with Agenzia delle Entrate - Fiscal Drawer section"
+  },
+  "paths": {
+    "/api/v1/ade/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login",
+        "description": "Effettua il login al sistema ADE con password o SPID (Fornitori SPID supportati: SielteID)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["fiscalCode", "vat"],
+                "properties": {
+                  "fiscalCode": {
+                    "type": "string",
+                    "description": "Codice fiscale. Questo campo è sempre richiesto"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "Password. Solo per login con password"
+                  },
+                  "pin": {
+                    "type": "string",
+                    "description": "PIN. Solo per login con password"
+                  },
+                  "vat": {
+                    "type": "string",
+                    "description": "Partita IVA. Utilizzato per selezionare l'utenza di lavoro"
+                  },
+                  "spid": {
+                    "type": "object",
+                    "description": "SPID data",
+                    "properties": {
+                      "provider": {
+                        "type": "string",
+                        "enum": ["sielte"]
+                      },
+                      "username": {
+                        "type": "string"
+                      },
+                      "password": {
+                        "type": "string"
+                      },
+                      "otpType": {
+                        "type": "string",
+                        "enum": ["app", "code"]
+                      },
+                      "otpCode": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login eseguito con successo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "Authentication token. It is valid until logout or session expiration (1 hour)"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/api/v1/ade/logout": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Logout",
+        "description": "Effettua il logout dal sistema",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "204": { "description": "Logout avvenuto con successo" },
+          "401": { "$ref": "#/components/responses/401" }
+        }
+      }
+    },
+
+    "/api/v1/ade/change-password": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Change password",
+        "description": "Cambia la password dell'utente",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["fiscalCode", "pin", "vat", "password", "newPassword"],
+                "properties": {
+                  "fiscalCode": { "type": "string" },
+                  "pin": { "type": "string" },
+                  "vat": { "type": "string" },
+                  "password": { "type": "string" },
+                  "newPassword": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cambio password avvenuto con successo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "boolean" },
+                    "description": { "type": "string" },
+                    "token": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "VAT_CHECK_FAILED_OR_UNAVAILABLE" },
+          "401": { "description": "AUTH_FAILED or CHANGE_PASSWORD_FAILED" }
+        }
+      }
+    },
+
+    "/api/v1/ade/docs": {
+      "get": {
+        "tags": ["Documents"],
+        "summary": "Get documents list",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "in": "query", "name": "offset", "schema": { "type": "number" } },
+          { "in": "query", "name": "pagination", "schema": { "type": "number" } },
+          { "in": "query", "name": "startDate", "schema": { "type": "string" } },
+          { "in": "query", "name": "endDate", "schema": { "type": "string" } },
+          { "in": "query", "name": "operationType", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Documents list" },
+          "401": { "$ref": "#/components/responses/401" }
+        }
+      },
+
+      "post": {
+        "tags": ["Documents"],
+        "summary": "Create document",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "lotteryCode": { "type": "string" },
+                  "uncollectedFee": { "type": "boolean" },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "qty": { "type": "number" },
+                        "description": { "type": "string" },
+                        "amount": { "type": "number" },
+                        "vat": {
+                          "type": "string",
+                          "enum": ["2","4","5","6","7.3","7.5","7.65","7.95","8.3","8.5","8.8","10","12.3","22","N1","N2","N3","N4","N5","N6"]
+                        },
+                        "discount": { "type": "number" },
+                        "gift": { "type": "boolean" }
+                      }
+                    }
+                  },
+                  "payment": {
+                    "type": "object",
+                    "properties": {
+                      "cash": { "type": "number" },
+                      "electronic": { "type": "number" },
+                      "ticket": {
+                        "type": "object",
+                        "properties": {
+                          "amount": { "type": "number" },
+                          "count": { "type": "number" }
+                        }
+                      },
+                      "discount": { "type": "number" },
+                      "attachedDocument": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+       "responses": {
+  "200": {
+    "description": "Response",
+    "content": {
+      "application/json": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "documentId": {
+              "type": "string",
+              "description": "ID documento codificato"
+            },
+            "pdfId": {
+              "type": "string",
+              "description": "ID PDF associato al documento (campo deprecato)"
+            }
+          }
+        }
+      }
+    }
+  },
+  "401": {
+    "$ref": "#/components/responses/401"
+  }
+}
+      }
+    },
+
+    "/api/v1/ade/docs/{docId}": {
+      "get": {
+        "tags": ["Documents"],
+        "summary": "Get document",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "docId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Document data" },
+          "401": { "$ref": "#/components/responses/401" }
+        }
+      }
+    },
+
+    "/api/v1/ade/docs/{docId}/download": {
+      "get": {
+        "tags": ["Documents"],
+        "summary": "Download document",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "docId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PDF",
+            "content": {
+              "application/pdf": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/401" }
+        }
+      }
+    },
+
+    "/api/v1/ade/docs/{docId}/cancel": {
+      "post": {
+        "tags": ["Documents"],
+        "summary": "Cancel document",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "docId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["cancel", "refund"]
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": { "type": "number" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Response" },
+          "401": { "$ref": "#/components/responses/401" }
+        }
+      }
+    },
+
+    "/api/v1/ade/interfaces/vat": {
+      "get": {
+        "tags": ["Interface"],
+        "summary": "Get VAT interface",
+        "responses": {
+          "200": { "description": "Interfaccia" },
+          "401": { "$ref": "#/components/responses/401" }
+        }
+      }
+    }
+  },
+
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "responses": {
+      "401": {
+        "description": "Unauthorized"
+      }
+    }
+  }
+}
