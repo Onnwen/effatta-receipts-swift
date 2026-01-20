@@ -23,7 +23,7 @@ public final actor EffattaReceiptsClient {
         client = try getConfigureClient(url: url)
     }
     
-    private func createReceipt(_ document: Operations.post_sol_api_sol_v1_sol_ade_sol_docs.Input.Body.jsonPayload) async throws -> Operations.post_sol_api_sol_v1_sol_ade_sol_docs.Output.Ok.Body.jsonPayload {
+    public func createReceipt(_ document: Operations.post_sol_api_sol_v1_sol_ade_sol_docs.Input.Body.jsonPayload) async throws -> Operations.post_sol_api_sol_v1_sol_ade_sol_docs.Output.Ok.Body.jsonPayload {
         try await checkAuthentication()
         
         let response = try await client.post_sol_api_sol_v1_sol_ade_sol_docs(
