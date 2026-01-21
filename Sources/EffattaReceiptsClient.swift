@@ -55,12 +55,33 @@ public final actor EffattaReceiptsClient {
             throw EffattaReceiptsError.badStatusCode
         }
     }
+    
+    public func downloadReceipt(id: String) async throws -> HTTPBody {
+        let response = try await client.get_sol_api_sol_v1_sol_ade_sol_docs_sol__lcub_docId_rcub__sol_download(
+            .init(
+                path: .init(
+                    docId: id
+                )
+            )
+        )
+        
+        guard case let .ok(body) = response else {
+            throw EffattaReceiptsError.badStatusCode
+        }
+        
+        do {
+            return try body.body.pdf
+        } catch {
+            throw EffattaReceiptsError.failedReadingPDF(error.localizedDescription)
+        }
+    }
 
     public enum EffattaReceiptsError: Error {
         case unknown
         case status(Int)
         case invalidEnvironmentURL
         case badStatusCode
+        case failedReadingPDF(String)
     }
 }
 
