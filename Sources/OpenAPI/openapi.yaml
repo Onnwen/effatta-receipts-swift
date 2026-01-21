@@ -319,6 +319,7 @@
         },
         "responses": {
           "200": { "description": "Response" },
+          "204": { "description": "Response" },
           "401": { "$ref": "#/components/responses/401" }
         }
       }

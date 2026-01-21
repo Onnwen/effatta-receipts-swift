@@ -51,7 +51,7 @@ public final actor EffattaReceiptsClient {
             )
         )
         
-        guard case .ok = response else {
+        guard response == .ok || response == .noContent else {
             throw EffattaReceiptsError.badStatusCode
         }
     }
