@@ -15,8 +15,8 @@ func getConfigureClient(url: URL, credentials: EffattaReceiptsCredentials) throw
         serverURL: url,
         transport: URLSessionTransport(),
         middlewares: [
-            AuthenticationMiddleware(url: url, credentials: credentials)
-        ]
+            AuthenticationMiddleware(url: url, credentials: credentials),
+        ],
     )
 }
 
@@ -28,12 +28,12 @@ package actor AuthenticationMiddleware {
 
     package init(url: URL, credentials: EffattaReceiptsCredentials) {
         self.credentials = credentials
-        self.client = Client(
+        client = Client(
             serverURL: url,
-            transport: URLSessionTransport()
+            transport: URLSessionTransport(),
         )
     }
-    
+
     private struct EffattaReceiptsAuthentication {
         var token: String
         var expiresAt: Date
@@ -45,25 +45,25 @@ extension AuthenticationMiddleware: ClientMiddleware {
         _ request: HTTPRequest,
         body: HTTPBody?,
         baseURL: URL,
-        operationID: String,
-        next: (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
+        operationID _: String,
+        next: (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?),
     ) async throws -> (HTTPResponse, HTTPBody?) {
         try await checkAuthentication()
-        
+
         guard let token = authentication?.token else {
             throw EffattaReceiptsAuthenticationError.tokenMissing
         }
-        
+
         var request = request
         request.headerFields[.authorization] = "Bearer \(token)"
         return try await next(request, body, baseURL)
     }
-    
+
     private func checkAuthentication() async throws {
         guard authentication == nil || authentication!.expiresAt < Date() else {
             return
         }
-        
+
         let response = try await client.post_sol_api_sol_v1_sol_ade_sol_login(
             .init(
                 body: .json(
@@ -72,23 +72,23 @@ extension AuthenticationMiddleware: ClientMiddleware {
                         password: credentials.password,
                         pin: credentials.pin,
                         vat: credentials.vat,
-                    )
-                )
-            )
+                    ),
+                ),
+            ),
         )
-        
+
         guard case let .ok(response) = response,
               let token = try response.body.json.token
         else {
             throw EffattaReceiptsAuthenticationError.tokenRefreshFailed
         }
-        
+
         authentication = .init(
             token: token,
-            expiresAt: Date().addingTimeInterval(60 * 55)
+            expiresAt: Date().addingTimeInterval(60 * 55),
         )
     }
-    
+
     enum EffattaReceiptsAuthenticationError: Error {
         case tokenRefreshFailed
         case tokenMissing
@@ -100,7 +100,7 @@ public struct EffattaReceiptsCredentials: Sendable {
     let password: String
     let vat: String
     let pin: String?
-    
+
     public init(fiscalCode: String, password: String, vat: String, pin: String?) {
         self.fiscalCode = fiscalCode
         self.password = password

@@ -15,7 +15,7 @@ let package = Package(
     products: [
         .library(
             name: "EffattaReceiptsSwift",
-            targets: ["EffattaReceiptsSwift"]
+            targets: ["EffattaReceiptsSwift"],
         ),
     ],
     dependencies: [
@@ -32,7 +32,7 @@ let package = Package(
             ],
             plugins: [
                 .plugin(name: "OpenAPIGenerator", package: "swift-openapi-generator"),
-            ]
+            ],
         ),
-    ]
+    ],
 )
