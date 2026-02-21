@@ -31,18 +31,22 @@ public final actor EffattaReceiptsClient {
             ),
         )
 
-        dump(response)
-
-        guard case let .ok(response) = response else {
-            throw EffattaReceiptsError.badStatusCode
-        }
-
-        do {
-            return try response.body.json
-        } catch {
+        switch response {
+        case .ok(let response):
+            do {
+                return try response.body.json
+            } catch {
+                dump(response)
+                dump(error)
+                dump(error.localizedDescription)
+                throw EffattaReceiptsError.unknown
+            }
+        case .unauthorized(let response):
             dump(response)
-            dump(error)
-            dump(error.localizedDescription)
+            throw EffattaReceiptsError.unknown
+        case .undocumented(let statusCode, let payload):
+            print(statusCode)
+            dump(response)
             throw EffattaReceiptsError.unknown
         }
     }
