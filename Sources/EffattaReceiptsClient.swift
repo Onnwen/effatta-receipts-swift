@@ -36,18 +36,12 @@ public final actor EffattaReceiptsClient {
             do {
                 return try response.body.json
             } catch {
-                dump(response)
-                dump(error)
-                dump(error.localizedDescription)
-                throw EffattaReceiptsError.unknown
+                throw EffattaReceiptsError.unknown("\(String(describing: response)) - \(String(describing: error)) - \(String(describing: error.localizedDescription))")
             }
         case .unauthorized(let response):
-            dump(response)
-            throw EffattaReceiptsError.unknown
+            throw EffattaReceiptsError.unknown(String(describing: response))
         case .undocumented(let statusCode, let payload):
-            print(statusCode)
-            dump(response)
-            throw EffattaReceiptsError.unknown
+            throw EffattaReceiptsError.unknown("\(String(describing: statusCode)) - \(String(describing: response))")
         }
     }
 
@@ -94,7 +88,7 @@ public final actor EffattaReceiptsClient {
     }
 
     public enum EffattaReceiptsError: Error {
-        case unknown
+        case unknown(String)
         case status(Int)
         case invalidEnvironmentURL
         case badStatusCode
