@@ -89,17 +89,18 @@ extension AuthenticationMiddleware: ClientMiddleware {
         )
     }
 
-    enum EffattaReceiptsAuthenticationError: Error {
-        case tokenRefreshFailed
-        case tokenMissing
-    }
+}
+
+public enum EffattaReceiptsAuthenticationError: Error {
+    case tokenRefreshFailed
+    case tokenMissing
 }
 
 public struct EffattaReceiptsCredentials: Sendable {
-    let fiscalCode: String
-    let password: String
-    let vat: String
-    let pin: String?
+    public let fiscalCode: String
+    public let password: String
+    public let vat: String
+    public let pin: String?
 
     public init(fiscalCode: String, password: String, vat: String, pin: String?) {
         self.fiscalCode = fiscalCode
