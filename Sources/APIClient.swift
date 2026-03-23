@@ -51,8 +51,7 @@ extension AuthenticationMiddleware: ClientMiddleware {
         try await checkAuthentication()
 
         guard let token = authentication?.token else {
-            dump(authentication)
-            throw EffattaReceiptsAuthenticationError.tokenMissing
+            throw EffattaReceiptsAuthenticationError.tokenMissing(String(describing: authentication))
         }
 
         var request = request
@@ -81,8 +80,7 @@ extension AuthenticationMiddleware: ClientMiddleware {
         guard case let .ok(response) = response,
               let token = try response.body.json.token
         else {
-            dump(response)
-            throw EffattaReceiptsAuthenticationError.tokenRefreshFailed
+            throw EffattaReceiptsAuthenticationError.tokenRefreshFailed(String(describing: response))
         }
 
         authentication = .init(
@@ -92,8 +90,8 @@ extension AuthenticationMiddleware: ClientMiddleware {
     }
 
     enum EffattaReceiptsAuthenticationError: Error {
-        case tokenRefreshFailed
-        case tokenMissing
+        case tokenRefreshFailed(String)
+        case tokenMissing(String)
     }
 }
 

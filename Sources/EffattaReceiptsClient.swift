@@ -39,10 +39,8 @@ public final actor EffattaReceiptsClient {
                 throw EffattaReceiptsError.unknown("\(String(describing: response)) - \(String(describing: error)) - \(String(describing: error.localizedDescription))")
             }
         case .unauthorized(let response):
-            dump(response)
             throw EffattaReceiptsError.unknown(String(describing: response))
         case .undocumented(let statusCode, let payload):
-            dump(response)
             throw EffattaReceiptsError.unknown("\(String(describing: statusCode)) - \(String(describing: response))")
         }
     }
@@ -61,8 +59,7 @@ public final actor EffattaReceiptsClient {
         )
 
         guard response == .ok || response == .noContent else {
-            dump(response)
-            throw EffattaReceiptsError.badStatusCode
+            throw EffattaReceiptsError.badStatusCode(String(describing: response))
         }
     }
 
@@ -76,16 +73,13 @@ public final actor EffattaReceiptsClient {
         )
 
         guard case let .ok(body) = response else {
-            throw EffattaReceiptsError.badStatusCode
+            throw EffattaReceiptsError.badStatusCode(String(describing: response))
         }
 
         do {
             return try body.body.pdf
         } catch {
-            dump(response)
-            dump(error)
-            dump(error.localizedDescription)
-            throw EffattaReceiptsError.failedReadingPDF(error.localizedDescription)
+            throw EffattaReceiptsError.failedReadingPDF(String(describing: error))
         }
     }
 
@@ -93,7 +87,7 @@ public final actor EffattaReceiptsClient {
         case unknown(String)
         case status(Int)
         case invalidEnvironmentURL
-        case badStatusCode
+        case badStatusCode(String)
         case failedReadingPDF(String)
     }
 }
