@@ -51,6 +51,7 @@ extension AuthenticationMiddleware: ClientMiddleware {
         try await checkAuthentication()
 
         guard let token = authentication?.token else {
+            dump(authentication)
             throw EffattaReceiptsAuthenticationError.tokenMissing
         }
 
@@ -80,6 +81,7 @@ extension AuthenticationMiddleware: ClientMiddleware {
         guard case let .ok(response) = response,
               let token = try response.body.json.token
         else {
+            dump(response)
             throw EffattaReceiptsAuthenticationError.tokenRefreshFailed
         }
 

@@ -39,8 +39,10 @@ public final actor EffattaReceiptsClient {
                 throw EffattaReceiptsError.unknown("\(String(describing: response)) - \(String(describing: error)) - \(String(describing: error.localizedDescription))")
             }
         case .unauthorized(let response):
+            dump(response)
             throw EffattaReceiptsError.unknown(String(describing: response))
         case .undocumented(let statusCode, let payload):
+            dump(response)
             throw EffattaReceiptsError.unknown("\(String(describing: statusCode)) - \(String(describing: response))")
         }
     }
