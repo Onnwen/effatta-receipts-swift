@@ -51,7 +51,7 @@ extension AuthenticationMiddleware: ClientMiddleware {
         try await checkAuthentication()
 
         guard let token = authentication?.token else {
-            throw EffattaReceiptsAuthenticationError.tokenMissing(String(describing: authentication))
+            throw EffattaReceiptsAuthenticationError.tokenMissing
         }
 
         var request = request
@@ -77,10 +77,22 @@ extension AuthenticationMiddleware: ClientMiddleware {
             ),
         )
 
-        guard case let .ok(response) = response,
-              let token = try response.body.json.token
-        else {
-            throw EffattaReceiptsAuthenticationError.tokenRefreshFailed(String(describing: response))
+        let token: String
+        switch response {
+        case .ok(let ok):
+            do {
+                guard let value = try ok.body.json.token else {
+                    throw EffattaReceiptsAuthenticationError.tokenRefreshMissingToken
+                }
+                token = value
+            } catch let error as EffattaReceiptsAuthenticationError {
+                throw error
+            } catch {
+                throw EffattaReceiptsAuthenticationError.tokenRefreshDecodingFailed(underlying: error)
+            }
+        case .undocumented(let statusCode, let payload):
+            let body = await collectBodyForDebug(payload.body)
+            throw EffattaReceiptsAuthenticationError.tokenRefreshFailed(statusCode: statusCode, body: body)
         }
 
         authentication = .init(
@@ -89,9 +101,30 @@ extension AuthenticationMiddleware: ClientMiddleware {
         )
     }
 
-    enum EffattaReceiptsAuthenticationError: Error {
-        case tokenRefreshFailed(String)
-        case tokenMissing(String)
+    enum EffattaReceiptsAuthenticationError: Error, CustomStringConvertible {
+        case tokenMissing
+        case tokenRefreshMissingToken
+        case tokenRefreshFailed(statusCode: Int, body: String?)
+        case tokenRefreshDecodingFailed(underlying: Error)
+
+        var description: String {
+            switch self {
+            case .tokenMissing:
+                return "EffattaReceiptsAuthenticationError.tokenMissing"
+            case .tokenRefreshMissingToken:
+                return "EffattaReceiptsAuthenticationError.tokenRefreshMissingToken"
+            case .tokenRefreshFailed(let statusCode, let body):
+                return """
+                EffattaReceiptsAuthenticationError.tokenRefreshFailed(statusCode: \(statusCode))
+                body: \(formatBody(body))
+                """
+            case .tokenRefreshDecodingFailed(let underlying):
+                return """
+                EffattaReceiptsAuthenticationError.tokenRefreshDecodingFailed
+                underlying: \(underlying)
+                """
+            }
+        }
     }
 }
 
